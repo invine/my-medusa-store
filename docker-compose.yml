@@ -1,0 +1,165 @@
+services:
+  deps:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      target: dev
+    command: pnpm install --frozen-lockfile
+    environment:
+      CI: "true"
+      PNPM_CONFIG_CONFIRM_MODULES_PURGE: "false"
+    volumes:
+      - .:/server
+      - workspace_node_modules:/server/node_modules
+      - backend_node_modules:/server/apps/backend/node_modules
+      - storefront_node_modules:/server/apps/storefront/node_modules
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa
+      POSTGRES_DB: medusa_dtc
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa_dtc"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      target: dev
+    command: >
+      sh -lc "cd apps/backend &&
+      pnpm exec medusa db:migrate &&
+      pnpm dev"
+    environment:
+      CI: "true"
+      PNPM_CONFIG_CONFIRM_MODULES_PURGE: "false"
+      NODE_ENV: development
+      PORT: 9000
+      DATABASE_URL: postgres://medusa:medusa@postgres:5432/medusa_dtc
+      REDIS_URL: redis://redis:6379
+      STORE_CORS: http://localhost:8000
+      ADMIN_CORS: http://localhost:9000,http://localhost:5173
+      AUTH_CORS: http://localhost:9000,http://localhost:8000,http://localhost:5173
+      JWT_SECRET: local_jwt_secret_change_me
+      COOKIE_SECRET: local_cookie_secret_change_me
+      MEDUSA_BACKEND_URL: http://localhost:9000
+      MEDUSA_WORKER_MODE: shared
+      DISABLE_MEDUSA_ADMIN: "false"
+    ports:
+      - "9000:9000"
+      - "5173:5173"
+    volumes:
+      - .:/server
+      - workspace_node_modules:/server/node_modules
+      - backend_node_modules:/server/apps/backend/node_modules
+      - storefront_node_modules:/server/apps/storefront/node_modules
+      - backend_medusa:/server/apps/backend/.medusa
+      - backend_uploads:/server/apps/backend/uploads
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  storefront:
+    build:
+      context: .
+      dockerfile: docker/storefront.Dockerfile
+      target: dev
+    command: >
+      sh -lc "cd apps/storefront &&
+      pnpm dev"
+    environment:
+      CI: "true"
+      PNPM_CONFIG_CONFIRM_MODULES_PURGE: "false"
+      NODE_ENV: development
+      MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
+      NEXT_PUBLIC_DEFAULT_REGION: ${NEXT_PUBLIC_DEFAULT_REGION:-dk}
+      NEXT_PUBLIC_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_STRIPE_KEY: ${NEXT_PUBLIC_STRIPE_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/server
+      - workspace_node_modules:/server/node_modules
+      - backend_node_modules:/server/apps/backend/node_modules
+      - storefront_node_modules:/server/apps/storefront/node_modules
+      - storefront_next:/server/apps/storefront/.next
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
+
+  seed:
+    profiles:
+      - seed
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      target: dev
+    command: >
+      sh -lc "cd apps/backend &&
+      pnpm exec medusa db:migrate &&
+      pnpm exec medusa exec ./src/migration-scripts/initial-data-seed.ts"
+    environment:
+      CI: "true"
+      PNPM_CONFIG_CONFIRM_MODULES_PURGE: "false"
+      NODE_ENV: development
+      DATABASE_URL: postgres://medusa:medusa@postgres:5432/medusa_dtc
+      REDIS_URL: redis://redis:6379
+      STORE_CORS: http://localhost:8000
+      ADMIN_CORS: http://localhost:9000,http://localhost:5173
+      AUTH_CORS: http://localhost:9000,http://localhost:8000,http://localhost:5173
+      JWT_SECRET: local_jwt_secret_change_me
+      COOKIE_SECRET: local_cookie_secret_change_me
+      MEDUSA_WORKER_MODE: shared
+      DISABLE_MEDUSA_ADMIN: "true"
+    volumes:
+      - .:/server
+      - workspace_node_modules:/server/node_modules
+      - backend_node_modules:/server/apps/backend/node_modules
+      - storefront_node_modules:/server/apps/storefront/node_modules
+      - backend_medusa:/server/apps/backend/.medusa
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  workspace_node_modules:
+  backend_node_modules:
+  storefront_node_modules:
+  backend_medusa:
+  backend_uploads:
+  storefront_next:
