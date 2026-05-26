@@ -116,6 +116,9 @@ migrations:
   hookDeletePolicy: BeforeHookCreation,HookSucceeded
   backoffLimit: 3
   activeDeadlineSeconds: 900
+  seed:
+    enabled: false
+    script: ./src/migration-scripts/initial-data-seed.js
 
 ingress:
   enabled: true

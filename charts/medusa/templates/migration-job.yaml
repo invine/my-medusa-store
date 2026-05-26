@@ -65,7 +65,9 @@ spec:
             - |
               set -e
               /server/apps/backend/node_modules/.bin/medusa db:migrate
-              /server/apps/backend/node_modules/.bin/medusa exec ./src/migration-scripts/initial-data-seed.js
+              {{- if .Values.migrations.seed.enabled }}
+              /server/apps/backend/node_modules/.bin/medusa exec {{ .Values.migrations.seed.script }}
+              {{- end }}
           env:
             - name: NODE_ENV
               valueFrom:
