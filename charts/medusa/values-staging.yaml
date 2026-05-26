@@ -25,6 +25,10 @@ config:
   authCors: https://medusa-api-staging.everk8s.duckdns.org,https://medusa-staging.everk8s.duckdns.org
   defaultRegion: ae
 
+storefront:
+  cache:
+    enabled: false
+
 ingress:
   issuer: letsencrypt-prod
   storefront:

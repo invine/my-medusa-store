@@ -10,6 +10,7 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
+  getStorefrontCache,
   removeAuthToken,
   removeCartId,
   setAuthToken,
@@ -37,7 +38,7 @@ export const retrieveCustomer =
         },
         headers,
         next,
-        cache: "force-cache",
+        cache: getStorefrontCache(),
       })
       .then(({ customer }) => customer)
       .catch(() => null)

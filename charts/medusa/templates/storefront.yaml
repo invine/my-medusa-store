@@ -62,6 +62,8 @@ spec:
               value: {{ .Values.storefront.port | quote }}
             - name: HOSTNAME
               value: "0.0.0.0"
+            - name: STOREFRONT_CACHE_ENABLED
+              value: {{ .Values.storefront.cache.enabled | quote }}
             - name: MEDUSA_BACKEND_INTERNAL_URL
               valueFrom:
                 configMapKeyRef:

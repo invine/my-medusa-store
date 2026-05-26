@@ -3,7 +3,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getCacheOptions, getStorefrontCache } from "./cookies"
 
 export const retrieveVariant = async (
   variant_id: string
@@ -30,7 +30,7 @@ export const retrieveVariant = async (
         },
         headers,
         next,
-        cache: "force-cache",
+        cache: getStorefrontCache(),
       }
     )
     .then(({ variant }) => variant)

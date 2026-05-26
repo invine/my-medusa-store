@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getCacheOptions, getStorefrontCache } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
 
 export const retrieveOrder = async (id: string) => {
@@ -23,7 +23,7 @@ export const retrieveOrder = async (id: string) => {
       },
       headers,
       next,
-      cache: "force-cache",
+      cache: getStorefrontCache(),
     })
     .then(({ order }) => order)
     .catch((err) => medusaError(err))
@@ -54,7 +54,7 @@ export const listOrders = async (
       },
       headers,
       next,
-      cache: "force-cache",
+      cache: getStorefrontCache(),
     })
     .then(({ orders }) => orders)
     .catch((err) => medusaError(err))

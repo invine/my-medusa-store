@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
-import { getCacheOptions } from "./cookies"
+import { getCacheOptions, getStorefrontCache } from "./cookies"
 
 export const listRegions = async () => {
   const next = {
@@ -13,7 +13,7 @@ export const listRegions = async () => {
     .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
       method: "GET",
       next,
-      cache: "force-cache",
+      cache: getStorefrontCache(),
     })
     .then(({ regions }) => regions)
 }
@@ -27,7 +27,7 @@ export const retrieveRegion = async (id: string) => {
     .fetch<{ region: HttpTypes.StoreRegion }>(`/store/regions/${id}`, {
       method: "GET",
       next,
-      cache: "force-cache",
+      cache: getStorefrontCache(),
     })
     .then(({ region }) => region)
 }

@@ -33,9 +33,19 @@ export const getCacheTag = async (tag: string): Promise<string> => {
   }
 }
 
+export const isStorefrontCacheEnabled = () =>
+  process.env.STOREFRONT_CACHE_ENABLED !== "false"
+
+export const getStorefrontCache = (): RequestCache =>
+  isStorefrontCacheEnabled() ? "force-cache" : "no-store"
+
 export const getCacheOptions = async (
   tag: string
 ): Promise<{ tags: string[] } | Record<string, never>> => {
+  if (!isStorefrontCacheEnabled()) {
+    return {}
+  }
+
   if (typeof window !== "undefined") {
     return {}
   }

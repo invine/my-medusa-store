@@ -71,6 +71,8 @@ worker:
 storefront:
   replicas: 1
   port: 8000
+  cache:
+    enabled: true
   resources:
     requests:
       cpu: 150m

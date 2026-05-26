@@ -8,6 +8,8 @@ const PUBLISHABLE_API_KEY =
   process.env.MEDUSA_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "ae"
+const STOREFRONT_CACHE_ENABLED =
+  process.env.STOREFRONT_CACHE_ENABLED !== "false"
 const PUBLISHABLE_API_KEY_PLACEHOLDERS = new Set([
   "pk_replace_me",
   "pk_build_placeholder",
@@ -38,20 +40,29 @@ async function getRegionMap(cacheId: string) {
   }
 
   if (
+    !STOREFRONT_CACHE_ENABLED ||
     !regionMap.keys().next().value ||
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
+    const cacheOptions = STOREFRONT_CACHE_ENABLED
+      ? {
+          next: {
+            revalidate: 3600,
+            tags: [`regions-${cacheId}`],
+          },
+          cache: "force-cache" as RequestCache,
+        }
+      : {
+          cache: "no-store" as RequestCache,
+        }
+
     // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
     const response = await fetch(`${BACKEND_URL}/store/regions`, {
       method: "GET",
       headers: {
         "x-publishable-api-key": PUBLISHABLE_API_KEY!,
       },
-      next: {
-        revalidate: 3600,
-        tags: [`regions-${cacheId}`],
-      },
-      cache: "force-cache",
+      ...cacheOptions,
     })
 
     if (!response.ok) {
@@ -70,6 +81,7 @@ async function getRegionMap(cacheId: string) {
     }
 
     // Create a map of country codes to regions.
+    regionMapCache.regionMap.clear()
     regions.forEach((region: HttpTypes.StoreRegion) => {
       region.countries?.forEach((c) => {
         regionMapCache.regionMap.set(c.iso_2 ?? "", region)
