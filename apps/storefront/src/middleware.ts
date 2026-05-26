@@ -4,9 +4,14 @@ import { NextRequest, NextResponse } from "next/server"
 const BACKEND_URL =
   process.env.MEDUSA_BACKEND_INTERNAL_URL ||
   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "dk"
-const PUBLISHABLE_API_KEY_PLACEHOLDER = "pk_replace_me"
+const PUBLISHABLE_API_KEY =
+  process.env.MEDUSA_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "ae"
+const PUBLISHABLE_API_KEY_PLACEHOLDERS = new Set([
+  "pk_replace_me",
+  "pk_build_placeholder",
+])
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
@@ -18,17 +23,17 @@ async function getRegionMap(cacheId: string) {
 
   if (!BACKEND_URL) {
     throw new Error(
-      "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a NEXT_PUBLIC_MEDUSA_BACKEND_URL environment variable."
+      "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a NEXT_PUBLIC_MEDUSA_BACKEND_URL environment variable.",
     )
   }
 
   if (
     !PUBLISHABLE_API_KEY ||
-    PUBLISHABLE_API_KEY === PUBLISHABLE_API_KEY_PLACEHOLDER ||
+    PUBLISHABLE_API_KEY_PLACEHOLDERS.has(PUBLISHABLE_API_KEY) ||
     !PUBLISHABLE_API_KEY.startsWith("pk_")
   ) {
     throw new Error(
-      "Middleware.ts: NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY must be set to a real Medusa publishable API key."
+      "Middleware.ts: MEDUSA_PUBLISHABLE_KEY or NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY must be set to a real Medusa publishable API key.",
     )
   }
 
@@ -52,7 +57,7 @@ async function getRegionMap(cacheId: string) {
     if (!response.ok) {
       const body = await response.text().catch(() => "")
       throw new Error(
-        `Backend returned ${response.status} from ${BACKEND_URL}/store/regions${body ? `: ${body}` : ""}`
+        `Backend returned ${response.status} from ${BACKEND_URL}/store/regions${body ? `: ${body}` : ""}`,
       )
     }
 
@@ -84,14 +89,16 @@ async function getRegionMap(cacheId: string) {
  */
 async function getCountryCode(
   request: NextRequest,
-  regionMap: Map<string, HttpTypes.StoreRegion | number>
+  regionMap: Map<string, HttpTypes.StoreRegion | number>,
 ) {
   let countryCode
 
   const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
 
   // Cloudflare Workers provides country via request.cf.country
-  const cloudflareCountryCode = (request as { cf?: { country?: string } }).cf?.country?.toLowerCase()
+  const cloudflareCountryCode = (
+    request as { cf?: { country?: string } }
+  ).cf?.country?.toLowerCase()
 
   // Vercel provides x-vercel-ip-country header
   const vercelCountryCode = request.headers

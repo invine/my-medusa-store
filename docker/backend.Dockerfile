@@ -39,7 +39,7 @@ COPY --from=build /server/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=build /server/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build /server/apps/backend ./apps/backend
 
-WORKDIR /server/apps/backend
+WORKDIR /server/apps/backend/.medusa/server
 
 EXPOSE 9000
-CMD ["pnpm", "start"]
+CMD ["/server/apps/backend/node_modules/.bin/medusa", "start"]

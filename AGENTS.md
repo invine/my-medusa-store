@@ -25,6 +25,13 @@
   - `pnpm storefront:dev` starts only the storefront.
   - `pnpm build`, `pnpm lint`, and `pnpm test` delegate through Turbo.
 
+## Kubernetes And GitOps Context
+
+- The Helm chart for this Medusa project is located at `/Users/invine/src/js/my-medusa-store/charts/medusa`.
+- The Argo CD bootstrap app is located at `/Users/invine/src/oracle-cluster/k8s-charts/argocd-bootstrap`.
+- For Kubernetes and Helm tasks related to this project, use this repo's chart as the deployment source context.
+- For Argo CD bootstrap tasks, use the bootstrap app in the `k8s-charts` repo.
+
 ## Local Development Notes
 
 - Medusa backend development server normally listens at `http://localhost:9000`.

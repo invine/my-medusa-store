@@ -4,30 +4,18 @@ import { listCategories } from "@lib/data/categories"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 
-const mockupCategories = [
-  { name: "Latina", handle: "latina" },
-  { name: "Standard", handle: "standard" },
-  { name: "Training Shoes", handle: "training-shoes" },
-  { name: "Training Clothes", handle: "training-clothes" },
-  { name: "Accessories", handle: "accessories" },
-]
-
 export default async function Nav() {
   const productCategories = await listCategories().catch(() => [])
 
   const topLevelCategories = productCategories?.filter(
     (category) => !category.parent_category
   )
-  const navCategories = topLevelCategories?.length
-    ? topLevelCategories.map((category) => ({
-        id: category.id,
-        name: category.name,
-        handle: category.handle,
-      }))
-    : mockupCategories.map((category) => ({
-        id: category.handle,
-        ...category,
-      }))
+  const navCategories =
+    topLevelCategories?.map((category) => ({
+      id: category.id,
+      name: category.name,
+      handle: category.handle,
+    })) ?? []
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -45,16 +33,26 @@ export default async function Nav() {
           </LocalizedClientLink>
 
           <div className="no-scrollbar flex flex-1 items-center gap-x-6 h-full overflow-x-auto whitespace-nowrap">
-            {navCategories.map((category) => (
+            {navCategories.length > 0 ? (
+              navCategories.map((category) => (
+                <LocalizedClientLink
+                  key={category.id}
+                  className="hover:text-ui-fg-base"
+                  href={`/categories/${category.handle}`}
+                  data-testid="nav-category-link"
+                >
+                  {category.name}
+                </LocalizedClientLink>
+              ))
+            ) : (
               <LocalizedClientLink
-                key={category.id}
                 className="hover:text-ui-fg-base"
-                href={`/categories/${category.handle}`}
-                data-testid="nav-category-link"
+                href="/store"
+                data-testid="nav-store-fallback-link"
               >
-                {category.name}
+                Store
               </LocalizedClientLink>
-            ))}
+            )}
           </div>
 
           <div className="flex items-center gap-x-6 h-full justify-end">

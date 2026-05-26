@@ -1,0 +1,33 @@
+namespace: staging
+
+imagePullSecrets:
+  - name: ghcr-pull-secret
+
+images:
+  backend:
+    repository: ghcr.io/invine/my-medusa-store-backend
+    tag: staging
+    pullPolicy: Always
+  storefront:
+    repository: ghcr.io/invine/my-medusa-store-storefront
+    tag: staging
+    pullPolicy: Always
+
+secrets:
+  create: false
+  name: medusa-secrets
+
+config:
+  backendPublicUrl: https://medusa-api-staging.everk8s.duckdns.org
+  storefrontPublicUrl: https://medusa-staging.everk8s.duckdns.org
+  storeCors: https://medusa-staging.everk8s.duckdns.org
+  adminCors: https://medusa-api-staging.everk8s.duckdns.org
+  authCors: https://medusa-api-staging.everk8s.duckdns.org,https://medusa-staging.everk8s.duckdns.org
+  defaultRegion: ae
+
+ingress:
+  issuer: letsencrypt-prod
+  storefront:
+    host: medusa-staging.everk8s.duckdns.org
+  backend:
+    host: medusa-api-staging.everk8s.duckdns.org

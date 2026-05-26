@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "medusa.fullname" . }}-storefront
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storefront
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "medusa.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: storefront
+  ports:
+    - name: http
+      port: {{ .Values.storefront.port }}
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "medusa.fullname" . }}-storefront
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storefront
+spec:
+  replicas: {{ .Values.storefront.replicas }}
+  selector:
+    matchLabels:
+      {{- include "medusa.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: storefront
+  template:
+    metadata:
+      labels:
+        {{- include "medusa.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: storefront
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: storefront
+          image: "{{ .Values.images.storefront.repository }}:{{ .Values.images.storefront.tag }}"
+          imagePullPolicy: {{ .Values.images.storefront.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.storefront.port }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NODE_ENV
+            - name: PORT
+              value: {{ .Values.storefront.port | quote }}
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: MEDUSA_BACKEND_INTERNAL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: MEDUSA_BACKEND_INTERNAL_URL
+            - name: NEXT_PUBLIC_MEDUSA_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NEXT_PUBLIC_MEDUSA_BACKEND_URL
+            - name: NEXT_PUBLIC_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NEXT_PUBLIC_BASE_URL
+            - name: NEXT_PUBLIC_DEFAULT_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NEXT_PUBLIC_DEFAULT_REGION
+            - name: NEXT_PUBLIC_STRIPE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NEXT_PUBLIC_STRIPE_KEY
+            - name: MEDUSA_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+            - name: NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.storefront.resources | nindent 12 }}

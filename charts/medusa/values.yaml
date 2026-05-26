@@ -1,0 +1,136 @@
+nameOverride: medusa
+namespace: medusa
+
+imagePullSecrets: []
+
+images:
+  backend:
+    repository: ghcr.io/invine/my-medusa-store-backend
+    tag: staging
+    pullPolicy: IfNotPresent
+  storefront:
+    repository: ghcr.io/invine/my-medusa-store-storefront
+    tag: staging
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: docker.io/library/postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  redis:
+    repository: docker.io/library/redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+
+storageClass: longhorn
+
+secrets:
+  create: false
+  name: medusa-secrets
+  databasePassword: ""
+  jwtSecret: ""
+  cookieSecret: ""
+  publishableKey: ""
+
+config:
+  nodeEnv: production
+  backendPublicUrl: https://medusa-api.example.com
+  storefrontPublicUrl: https://medusa.example.com
+  storeCors: https://medusa.example.com
+  adminCors: https://medusa-api.example.com
+  authCors: https://medusa-api.example.com,https://medusa.example.com
+  defaultRegion: ae
+  stripeKey: ""
+
+backend:
+  replicas: 1
+  port: 9000
+  adminEnabled: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  uploads:
+    enabled: true
+    size: 1Gi
+    mountPath: /server/apps/backend/.medusa/server/uploads
+
+worker:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+storefront:
+  replicas: 1
+  port: 8000
+  resources:
+    requests:
+      cpu: 150m
+      memory: 384Mi
+    limits:
+      cpu: 750m
+      memory: 768Mi
+
+postgres:
+  enabled: true
+  name: medusa-postgres
+  database: medusa_dtc
+  username: medusa
+  port: 5432
+  pgdata: /var/lib/postgresql/data/pgdata
+  storage:
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+redis:
+  enabled: true
+  name: medusa-redis
+  port: 6379
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+migrations:
+  enabled: true
+  hook: true
+  hookDeletePolicy: BeforeHookCreation,HookSucceeded
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+
+ingress:
+  enabled: true
+  className: nginx
+  issuer: letsencrypt-staging
+  sslRedirect: "false"
+  storefront:
+    host: medusa.example.com
+  backend:
+    host: medusa-api.example.com
+
+backup:
+  enabled: true
+  veleroNamespace: velero
+  schedule: "0 0 * * *"
+  ttl: "720h0m0s"
+  storageLocation: default
+  snapshotVolumes: false

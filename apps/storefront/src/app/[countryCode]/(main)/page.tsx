@@ -3,11 +3,18 @@ import { Metadata } from "next"
 import DanceShopMockup from "@modules/home/templates/dance-shop-mockup"
 
 export const metadata: Metadata = {
-  title: "Vuelta Dance Shoes",
-  description:
-    "A dance shoes storefront mockup for Latina, Standard, training shoes, training clothes, and accessories.",
+  title: "Store",
+  description: "Browse products, categories, and collections.",
 }
 
-export default async function Home() {
-  return <DanceShopMockup />
+type Params = {
+  params: Promise<{
+    countryCode: string
+  }>
+}
+
+export default async function Home(props: Params) {
+  const params = await props.params
+
+  return <DanceShopMockup countryCode={params.countryCode} />
 }

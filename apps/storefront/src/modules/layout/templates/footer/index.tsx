@@ -4,18 +4,6 @@ import { Text, clx } from "@modules/common/components/ui"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-const mockupCategories = [
-  { id: "latina", name: "Latina", handle: "latina" },
-  { id: "standard", name: "Standard", handle: "standard" },
-  { id: "training-shoes", name: "Training Shoes", handle: "training-shoes" },
-  {
-    id: "training-clothes",
-    name: "Training Clothes",
-    handle: "training-clothes",
-  },
-  { id: "accessories", name: "Accessories", handle: "accessories" },
-]
-
 export default async function Footer() {
   const { collections } = await listCollections({
     fields: "*products",
@@ -24,9 +12,7 @@ export default async function Footer() {
   const topLevelCategories = productCategories.filter(
     (category) => !category.parent_category
   )
-  const footerCategories = topLevelCategories.length
-    ? topLevelCategories.slice(0, 6)
-    : mockupCategories
+  const footerCategories = topLevelCategories.slice(0, 6)
 
   return (
     <footer className="w-full border-t border-ui-border-base bg-white">
@@ -52,17 +38,29 @@ export default async function Footer() {
                 className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small"
                 data-testid="footer-categories"
               >
-                {footerCategories.map((category) => (
-                  <li key={category.id}>
+                {footerCategories.length > 0 ? (
+                  footerCategories.map((category) => (
+                    <li key={category.id}>
+                      <LocalizedClientLink
+                        className="hover:text-ui-fg-base"
+                        href={`/categories/${category.handle}`}
+                        data-testid="category-link"
+                      >
+                        {category.name}
+                      </LocalizedClientLink>
+                    </li>
+                  ))
+                ) : (
+                  <li>
                     <LocalizedClientLink
                       className="hover:text-ui-fg-base"
-                      href={`/categories/${category.handle}`}
+                      href="/store"
                       data-testid="category-link"
                     >
-                      {category.name}
+                      All products
                     </LocalizedClientLink>
                   </li>
-                ))}
+                )}
               </ul>
             </div>
 

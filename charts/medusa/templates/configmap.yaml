@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "medusa.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  MEDUSA_BACKEND_URL: {{ .Values.config.backendPublicUrl | quote }}
+  NEXT_PUBLIC_MEDUSA_BACKEND_URL: {{ .Values.config.backendPublicUrl | quote }}
+  NEXT_PUBLIC_BASE_URL: {{ .Values.config.storefrontPublicUrl | quote }}
+  MEDUSA_BACKEND_INTERNAL_URL: "http://{{ include "medusa.fullname" . }}-backend:{{ .Values.backend.port }}"
+  STORE_CORS: {{ .Values.config.storeCors | quote }}
+  ADMIN_CORS: {{ .Values.config.adminCors | quote }}
+  AUTH_CORS: {{ .Values.config.authCors | quote }}
+  NEXT_PUBLIC_DEFAULT_REGION: {{ .Values.config.defaultRegion | quote }}
+  NEXT_PUBLIC_STRIPE_KEY: {{ .Values.config.stripeKey | quote }}
+  REDIS_URL: {{ include "medusa.redisUrl" . | quote }}
+  PORT: {{ .Values.backend.port | quote }}
+---
+{{- if .Values.secrets.create }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "medusa.secretName" . }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: {{ .Values.secrets.databasePassword | quote }}
+  JWT_SECRET: {{ .Values.secrets.jwtSecret | quote }}
+  COOKIE_SECRET: {{ .Values.secrets.cookieSecret | quote }}
+  NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: {{ .Values.secrets.publishableKey | quote }}
+{{- end }}

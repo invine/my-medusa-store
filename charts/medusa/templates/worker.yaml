@@ -1,0 +1,86 @@
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "medusa.fullname" . }}-worker
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "medusa.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "medusa.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NODE_ENV
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: {{ include "medusa.databaseUrl" . | quote }}
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: REDIS_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: JWT_SECRET
+            - name: COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: COOKIE_SECRET
+            - name: STORE_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: STORE_CORS
+            - name: ADMIN_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: ADMIN_CORS
+            - name: AUTH_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: AUTH_CORS
+            - name: MEDUSA_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: MEDUSA_BACKEND_URL
+            - name: MEDUSA_WORKER_MODE
+              value: "worker"
+            - name: DISABLE_MEDUSA_ADMIN
+              value: "true"
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+{{- end }}

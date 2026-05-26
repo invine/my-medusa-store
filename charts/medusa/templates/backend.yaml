@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "medusa.fullname" . }}-backend
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "medusa.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+  ports:
+    - name: http
+      port: {{ .Values.backend.port }}
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "medusa.fullname" . }}-backend
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    {{- include "medusa.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "medusa.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "medusa.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+      {{- if .Values.backend.uploads.enabled }}
+      annotations:
+        backup.velero.io/backup-volumes: uploads
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.port }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: NODE_ENV
+            - name: PORT
+              value: {{ .Values.backend.port | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: {{ include "medusa.databaseUrl" . | quote }}
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: REDIS_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: JWT_SECRET
+            - name: COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "medusa.secretName" . }}
+                  key: COOKIE_SECRET
+            - name: STORE_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: STORE_CORS
+            - name: ADMIN_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: ADMIN_CORS
+            - name: AUTH_CORS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: AUTH_CORS
+            - name: MEDUSA_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "medusa.fullname" . }}-config
+                  key: MEDUSA_BACKEND_URL
+            - name: MEDUSA_WORKER_MODE
+              value: {{ ternary "server" "shared" .Values.worker.enabled | quote }}
+            - name: DISABLE_MEDUSA_ADMIN
+              value: {{ ternary "false" "true" .Values.backend.adminEnabled | quote }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- if .Values.backend.uploads.enabled }}
+          volumeMounts:
+            - name: uploads
+              mountPath: {{ .Values.backend.uploads.mountPath }}
+          {{- end }}
+      {{- if .Values.backend.uploads.enabled }}
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: {{ include "medusa.fullname" . }}-uploads
+      {{- end }}

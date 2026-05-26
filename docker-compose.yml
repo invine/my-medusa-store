@@ -99,7 +99,7 @@ services:
       MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
       NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
-      NEXT_PUBLIC_DEFAULT_REGION: ${NEXT_PUBLIC_DEFAULT_REGION:-dk}
+      NEXT_PUBLIC_DEFAULT_REGION: ${NEXT_PUBLIC_DEFAULT_REGION:-ae}
       NEXT_PUBLIC_BASE_URL: http://localhost:8000
       NEXT_PUBLIC_STRIPE_KEY: ${NEXT_PUBLIC_STRIPE_KEY:-}
     ports:
@@ -138,6 +138,8 @@ services:
       AUTH_CORS: http://localhost:9000,http://localhost:8000,http://localhost:5173
       JWT_SECRET: local_jwt_secret_change_me
       COOKIE_SECRET: local_cookie_secret_change_me
+      MEDUSA_PUBLISHABLE_KEY: ${MEDUSA_PUBLISHABLE_KEY:-}
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
       MEDUSA_WORKER_MODE: shared
       DISABLE_MEDUSA_ADMIN: "true"
     volumes:
