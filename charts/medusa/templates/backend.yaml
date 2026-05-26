@@ -108,6 +108,10 @@ spec:
                 configMapKeyRef:
                   name: {{ include "medusa.fullname" . }}-config
                   key: MEDUSA_BACKEND_URL
+            {{- if .Values.backend.uploads.enabled }}
+            - name: FILE_UPLOAD_DIR
+              value: {{ .Values.backend.uploads.mountPath | quote }}
+            {{- end }}
             - name: MEDUSA_WORKER_MODE
               value: {{ ternary "server" "shared" .Values.worker.enabled | quote }}
             - name: DISABLE_MEDUSA_ADMIN
