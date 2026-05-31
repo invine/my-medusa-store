@@ -10,7 +10,7 @@ images:
     pullPolicy: Always
   storefront:
     repository: ghcr.io/invine/my-medusa-store-storefront
-    tag: 20260531082254-dfa247b3031a-dirty
+    tag: 20260531090739-4ecf88b6a79c
     pullPolicy: Always
 
 secrets:
