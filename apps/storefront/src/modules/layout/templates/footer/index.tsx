@@ -1,4 +1,4 @@
-import { listCategories } from "@lib/data/categories"
+import { listTopLevelCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { Text, clx } from "@modules/common/components/ui"
 
@@ -8,11 +8,15 @@ export default async function Footer() {
   const { collections } = await listCollections({
     fields: "*products",
   }).catch(() => ({ collections: [], count: 0 }))
-  const productCategories = await listCategories().catch(() => [])
-  const topLevelCategories = productCategories.filter(
-    (category) => !category.parent_category
-  )
-  const footerCategories = topLevelCategories.slice(0, 6)
+  const footerCategories = (
+    await listTopLevelCategories({
+      fields: "id,name,handle,*parent_category",
+    }).catch(() => [])
+  ).slice(0, 6)
+  const featuredCategoryNames = footerCategories
+    .slice(0, 3)
+    .map((category) => category.name)
+    .join(", ")
 
   return (
     <footer className="w-full border-t border-ui-border-base bg-white">
@@ -26,8 +30,9 @@ export default async function Footer() {
               Vuelta Dance
             </LocalizedClientLink>
             <p className="mt-4 max-w-xs text-small-regular text-ui-fg-subtle">
-              Dance shoes, practice layers, and accessories for competition and
-              everyday studio work.
+              {featuredCategoryNames
+                ? `Browse ${featuredCategoryNames} from the current catalog.`
+                : "Browse products from the current catalog."}
             </p>
           </div>
 

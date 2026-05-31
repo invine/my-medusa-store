@@ -1,21 +1,13 @@
 import { Suspense } from "react"
 
-import { listCategories } from "@lib/data/categories"
+import { listTopLevelCategories } from "@lib/data/categories"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 
 export default async function Nav() {
-  const productCategories = await listCategories().catch(() => [])
-
-  const topLevelCategories = productCategories?.filter(
-    (category) => !category.parent_category
-  )
-  const navCategories =
-    topLevelCategories?.map((category) => ({
-      id: category.id,
-      name: category.name,
-      handle: category.handle,
-    })) ?? []
+  const navCategories = await listTopLevelCategories({
+    fields: "id,name,handle,*parent_category",
+  }).catch(() => [])
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">

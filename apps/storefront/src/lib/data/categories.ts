@@ -2,20 +2,25 @@ import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions, getStorefrontCache } from "./cookies"
 
-export const listCategories = async (query?: Record<string, unknown>) => {
+type CategoryListQuery = HttpTypes.FindParams &
+  HttpTypes.StoreProductCategoryListParams
+
+const DEFAULT_CATEGORY_FIELDS =
+  "*category_children, *products, *parent_category, *parent_category.parent_category"
+
+export const listCategories = async (query: CategoryListQuery = {}) => {
   const next = {
     ...(await getCacheOptions("categories")),
   }
 
-  const limit = query?.limit || 100
+  const limit = query.limit || 100
 
   return sdk.client
-    .fetch<{ product_categories: HttpTypes.StoreProductCategory[] }>(
+    .fetch<HttpTypes.StoreProductCategoryListResponse>(
       "/store/product-categories",
       {
         query: {
-          fields:
-            "*category_children, *products, *parent_category, *parent_category.parent_category",
+          fields: DEFAULT_CATEGORY_FIELDS,
           limit,
           ...query,
         },
@@ -24,6 +29,14 @@ export const listCategories = async (query?: Record<string, unknown>) => {
       }
     )
     .then(({ product_categories }) => product_categories)
+}
+
+export const listTopLevelCategories = async (
+  query: CategoryListQuery = {}
+) => {
+  const categories = await listCategories(query)
+
+  return categories.filter((category) => !category.parent_category)
 }
 
 export const getCategoryByHandle = async (categoryHandle: string[]) => {

@@ -1,4 +1,4 @@
-import { listCategories } from "@lib/data/categories"
+import { listTopLevelCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
@@ -42,7 +42,7 @@ type HomeProps = {
 export default async function DanceShopMockup({ countryCode }: HomeProps) {
   const [categories, collectionsResult, region, productsResult] =
     await Promise.all([
-      listCategories({
+      listTopLevelCategories({
         fields:
           "*category_children,*products,*products.images,*parent_category,*parent_category.parent_category",
       }).catch(() => []),
@@ -61,9 +61,7 @@ export default async function DanceShopMockup({ countryCode }: HomeProps) {
       }).catch(() => null),
     ])
 
-  const topLevelCategories = categories
-    .filter((category) => !category.parent_category)
-    .slice(0, 5)
+  const topLevelCategories = categories.slice(0, 5)
   const featuredProducts = productsResult?.response.products ?? []
   const productCount = productsResult?.response.count ?? featuredProducts.length
   const collections = collectionsResult.collections.slice(0, 6)
@@ -172,7 +170,7 @@ export default async function DanceShopMockup({ countryCode }: HomeProps) {
                 Browse categories
               </p>
               <h2 className="text-2xl-regular text-ui-fg-base">
-                Shop by department
+                Shop by category
               </h2>
             </div>
             <LocalizedClientLink
