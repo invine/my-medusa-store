@@ -6,11 +6,11 @@ imagePullSecrets:
 images:
   backend:
     repository: ghcr.io/invine/my-medusa-store-backend
-    tag: staging
+    tag: 20260531080548-d54d2821ee0d-dirty
     pullPolicy: Always
   storefront:
     repository: ghcr.io/invine/my-medusa-store-storefront
-    tag: staging
+    tag: 20260531080548-d54d2821ee0d-dirty
     pullPolicy: Always
 
 secrets:

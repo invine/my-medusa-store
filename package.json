@@ -14,7 +14,8 @@
     "backend:seed": "turbo seed --filter=@dtc/backend",
     "backend:seed:uae": "pnpm --filter @dtc/backend seed:uae",
     "backend:dev": "turbo dev --filter=@dtc/backend",
-    "storefront:dev": "turbo dev --filter=@dtc/storefront"
+    "storefront:dev": "turbo dev --filter=@dtc/storefront",
+    "images:publish": "scripts/build-and-push-images.sh"
   },
   "devDependencies": {
     "turbo": "^2.0.14",
