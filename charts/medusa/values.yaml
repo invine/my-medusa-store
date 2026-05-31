@@ -113,7 +113,7 @@ redis:
       memory: 256Mi
 
 migrations:
-  enabled: true
+  enabled: false
   hook: true
   hookDeletePolicy: BeforeHookCreation,HookSucceeded
   backoffLimit: 3
