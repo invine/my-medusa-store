@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VALUES_FILE="${VALUES_FILE:-charts/medusa/values-staging.yaml}"
-PLATFORMS="${PLATFORMS:-linux/amd64}"
+PLATFORMS="${PLATFORMS:-linux/arm64}"
 DRY_RUN="${DRY_RUN:-false}"
 
 cd "$ROOT_DIR"
